@@ -33,14 +33,6 @@
             border-radius: 1.5rem;
         }
 
-        .point-gradient-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        }
-
-        .point-gradient-purple {
-            background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%);
-        }
-
         .text-glow-blue {
             text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
         }
@@ -73,6 +65,15 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        select option {
+            background: #1f2937;
+            color: white;
+        }
+
+        .rank-gold { color: #FFD700; filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5)); }
+        .rank-silver { color: #C0C0C0; filter: drop-shadow(0 0 5px rgba(192, 192, 192, 0.5)); }
+        .rank-bronze { color: #CD7F32; filter: drop-shadow(0 0 5px rgba(205, 127, 50, 0.5)); }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -84,12 +85,31 @@
                 <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-glow-blue">
                     우리 동네 아파트 <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">실거래가 대시보드</span>
                 </h1>
-                <p class="text-gray-400 mt-2">최신 실거래 데이터를 기반으로 한 시장 분석 보고서</p>
+                <p class="text-gray-400 mt-2">법정동별 데이터 분석 및 실시간 가격 랭킹을 제공합니다.</p>
             </div>
-            <div id="last-update" class="text-sm text-gray-500 bg-white/5 px-4 py-2 rounded-full border border-white/10">
-                데이터 로딩 중...
+            <div class="flex flex-col items-end gap-2">
+                <div id="last-update" class="text-sm text-gray-500 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+                    데이터 로딩 중...
+                </div>
             </div>
         </header>
+
+        <!-- Filter Bar -->
+        <div class="glass-card p-4 mb-8 flex flex-col md:flex-row gap-4 items-center">
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <i data-lucide="map-pin" class="text-purple-400"></i>
+                <label for="district-filter" class="text-sm font-semibold text-gray-300 shrink-0">동네 선택</label>
+                <select id="district-filter" class="w-full md:w-64 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500 transition-all cursor-pointer hover:bg-white/10">
+                    <option value="all">전체보기</option>
+                </select>
+            </div>
+            <div class="hidden md:block h-8 w-px bg-white/10"></div>
+            <div class="flex items-center gap-3 w-full md:w-auto flex-1">
+                <i data-lucide="search" class="text-blue-400"></i>
+                <input type="text" id="table-search" placeholder="아파트 이름으로 검색..." 
+                       class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-all">
+            </div>
+        </div>
 
         <!-- Loading State -->
         <div id="loading-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -101,28 +121,28 @@
 
         <!-- Summary Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="glass-card p-6 flex flex-col items-start">
+            <div class="glass-card p-6 flex flex-col items-start transition-transform hover:scale-[1.02]">
                 <div class="p-3 rounded-xl bg-blue-500/10 text-blue-400 mb-4">
                     <i data-lucide="bar-chart-3"></i>
                 </div>
-                <span class="text-gray-400 text-sm">전체 거래 건수</span>
+                <span class="text-gray-400 text-sm">거래 건수</span>
                 <div id="stat-total-count" class="text-2xl font-bold mt-1">- 건</div>
             </div>
-            <div class="glass-card p-6 flex flex-col items-start">
+            <div class="glass-card p-6 flex flex-col items-start transition-transform hover:scale-[1.02]">
                 <div class="p-3 rounded-xl bg-purple-500/10 text-purple-400 mb-4">
                     <i data-lucide="trending-up"></i>
                 </div>
                 <span class="text-gray-400 text-sm">평균 거래 금액</span>
                 <div id="stat-avg-price" class="text-2xl font-bold mt-1">- 만원</div>
             </div>
-            <div class="glass-card p-6 flex flex-col items-start border-blue-500/30">
+            <div class="glass-card p-6 flex flex-col items-start border-blue-500/30 transition-transform hover:scale-[1.02]">
                 <div class="p-3 rounded-xl bg-blue-600/20 text-blue-300 mb-4">
                     <i data-lucide="award"></i>
                 </div>
                 <span class="text-gray-400 text-sm">최고 거래가</span>
                 <div id="stat-max-price" class="text-2xl font-bold mt-1 text-blue-400">- 만원</div>
             </div>
-            <div class="glass-card p-6 flex flex-col items-start border-purple-500/30">
+            <div class="glass-card p-6 flex flex-col items-start border-purple-500/30 transition-transform hover:scale-[1.02]">
                 <div class="p-3 rounded-xl bg-purple-600/20 text-purple-300 mb-4">
                     <i data-lucide="arrow-down-circle"></i>
                 </div>
@@ -137,7 +157,7 @@
             <div class="lg:col-span-2 glass-card p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-xl font-bold flex items-center gap-2">
-                        <i data-lucide="line-chart" class="text-blue-400"></i> 월별 평균 거래가격 추이
+                        <i data-lucide="line-chart" class="text-blue-400"></i> <span id="chart-title">최근 6개월 평균 거래가격 추이</span>
                     </h3>
                 </div>
                 <div class="h-[350px] w-full">
@@ -145,39 +165,48 @@
                 </div>
             </div>
 
-            <!-- Area Analysis -->
-            <div class="glass-card p-6 overflow-hidden">
-                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
-                    <i data-lucide="pie-chart" class="text-purple-400"></i> 거래 단지 상위
-                </h3>
-                <div id="top-apartments" class="space-y-4">
-                    <!-- Dynamic content -->
+            <!-- Right Column: Rankings -->
+            <div class="space-y-8">
+                <!-- Expensive TOP 5 -->
+                <div class="glass-card p-6 overflow-hidden">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="trophy" class="text-yellow-400"></i> 우리 동네 비싼 아파트 <span class="text-yellow-500">TOP 5</span>
+                    </h3>
+                    <div id="price-ranking-list" class="space-y-3">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <!-- Popular Complexes -->
+                <div class="glass-card p-6 overflow-hidden">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="text-purple-400"></i> 인기 단지 상위
+                    </h3>
+                    <div id="top-apartments" class="space-y-4">
+                        <!-- Dynamic content -->
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Data Table -->
         <div class="glass-card overflow-hidden">
-            <div class="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="p-6 border-b border-white/10">
                 <h3 class="text-xl font-bold flex items-center gap-2">
                     <i data-lucide="list" class="text-blue-400"></i> 상세 거래 내역
                 </h3>
-                <div class="flex gap-2 w-full md:w-auto">
-                    <input type="text" id="table-search" placeholder="아파트명 검색..." 
-                           class="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-full md:w-64">
-                </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-left text-sm border-separate border-spacing-0">
                     <thead>
                         <tr class="bg-white/5 text-gray-400">
-                            <th class="p-4 font-semibold">거래일자</th>
-                            <th class="p-4 font-semibold">아파트명</th>
-                            <th class="p-4 font-semibold">법정동</th>
-                            <th class="p-4 font-semibold text-right">전용면적(㎡)</th>
-                            <th class="p-4 font-semibold text-center">층</th>
-                            <th class="p-4 font-semibold text-right">거래금액(만원)</th>
-                            <th class="p-4 font-semibold text-center">건축년도</th>
+                            <th class="p-4 font-semibold border-b border-white/10">거래일자</th>
+                            <th class="p-4 font-semibold border-b border-white/10">아파트명</th>
+                            <th class="p-4 font-semibold border-b border-white/10">법정동</th>
+                            <th class="p-4 font-semibold text-right border-b border-white/10">전용면적(㎡)</th>
+                            <th class="p-4 font-semibold text-center border-b border-white/10">층</th>
+                            <th class="p-4 font-semibold text-right border-b border-white/10">거래금액(만원)</th>
+                            <th class="p-4 font-semibold text-center border-b border-white/10">건축년도</th>
                         </tr>
                     </thead>
                     <tbody id="transaction-table-body" class="divide-y divide-white/5">
@@ -210,12 +239,17 @@
                     header: true,
                     complete: function(results) {
                         rawData = results.data.filter(row => row.거래일자 && row.아파트명);
-                        processAndRender(rawData);
+                        
+                        // Populate District Filter initially
+                        populateDistrictFilter(rawData);
+                        
+                        // Initial Render
+                        applyFiltersAndRender();
+                        
                         document.getElementById('loading-overlay').classList.add('hidden');
                     },
                     error: function(err) {
                         console.error("CSV Loading Error:", err);
-                        alert("데이터를 불러오는 중 오류가 발생했습니다.");
                     }
                 });
             } catch (error) {
@@ -223,8 +257,25 @@
             }
         }
 
+        function populateDistrictFilter(data) {
+            const districtSet = new Set();
+            data.forEach(item => {
+                if(item.법정동) districtSet.add(item.법정동.trim());
+            });
+
+            const sortedDistricts = Array.from(districtSet).sort();
+            const filterEl = document.getElementById('district-filter');
+            
+            sortedDistricts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                filterEl.appendChild(option);
+            });
+        }
+
         function formatPrice(val) {
-            const price = parseInt(val.replace(/,/g, ''));
+            const price = parseInt(val.toString().replace(/,/g, ''));
             if (price >= 10000) {
                 const uk = Math.floor(price / 10000);
                 const man = price % 10000;
@@ -233,23 +284,132 @@
             return `${price.toLocaleString()}`;
         }
 
-        function processAndRender(data) {
-            // 1. Stats Calculation
-            const prices = data.map(d => parseInt(d['거래금액(만원)'].replace(/,/g, ''))).filter(p => !isNaN(p));
-            const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-            const maxPrice = Math.max(...prices);
-            const minPrice = Math.min(...prices);
+        function applyFiltersAndRender() {
+            const districtValue = document.getElementById('district-filter').value;
+            const searchValue = document.getElementById('table-search').value.toLowerCase();
 
-            document.getElementById('stat-total-count').innerText = `${data.length.toLocaleString()} 건`;
-            document.getElementById('stat-avg-price').innerText = `${formatPrice(avgPrice.toString())}`;
-            document.getElementById('stat-max-price').innerText = `${formatPrice(maxPrice.toString())}`;
-            document.getElementById('stat-min-price').innerText = `${formatPrice(minPrice.toString())}`;
+            let filtered = rawData;
+
+            // 1. Filter by District
+            if (districtValue !== 'all') {
+                filtered = filtered.filter(d => d.법정동.trim() === districtValue);
+                document.getElementById('chart-title').innerText = `${districtValue} 최근 6개월 평균 거래가격 추이`;
+            } else {
+                document.getElementById('chart-title').innerText = `전체 지역 최근 6개월 평균 거래가격 추이`;
+            }
+
+            // 2. Filter by Search Keyword
+            if (searchValue) {
+                filtered = filtered.filter(d => d.아파트명.toLowerCase().includes(searchValue));
+            }
+
+            renderDashboard(filtered);
+        }
+
+        function renderDashboard(data) {
+            // Stats Update
+            if (data.length > 0) {
+                const prices = data.map(d => parseInt(d['거래금액(만원)'].replace(/,/g, ''))).filter(p => !isNaN(p));
+                const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+                const maxPrice = Math.max(...prices);
+                const minPrice = Math.min(...prices);
+
+                document.getElementById('stat-total-count').innerText = `${data.length.toLocaleString()} 건`;
+                document.getElementById('stat-avg-price').innerText = `${formatPrice(avgPrice)}`;
+                document.getElementById('stat-max-price').innerText = `${formatPrice(maxPrice)}`;
+                document.getElementById('stat-min-price').innerText = `${formatPrice(minPrice)}`;
+            } else {
+                ['stat-total-count', 'stat-avg-price', 'stat-max-price', 'stat-min-price'].forEach(id => {
+                    document.getElementById(id).innerText = "데이터 없음";
+                });
+            }
+            
             document.getElementById('last-update').innerText = `최종 업데이트: ${new Date().toLocaleDateString()}`;
 
-            // 2. Table Rendering
+            // Tables & Charts & Rankings
             renderTable(data);
+            renderTopApts(data);
+            renderPriceRanking(data);
+            renderChart(data);
+        }
 
-            // 3. Apartment Ranking Analysis
+        function renderPriceRanking(data) {
+            const rankingContainer = document.getElementById('price-ranking-list');
+            
+            if (data.length === 0) {
+                rankingContainer.innerHTML = `<p class="text-gray-500 text-sm py-4">순위 데이터가 없습니다.</p>`;
+                return;
+            }
+
+            // Sort by price descending
+            const sortedByPrice = [...data].sort((a, b) => {
+                const priceA = parseInt(a['거래금액(만원)'].replace(/,/g, ''));
+                const priceB = parseInt(b['거래금액(만원)'].replace(/,/g, ''));
+                return priceB - priceA;
+            }).slice(0, 5);
+
+            rankingContainer.innerHTML = sortedByPrice.map((d, index) => {
+                const rank = index + 1;
+                let rankStyle = "text-gray-400";
+                let icon = "";
+                
+                if(rank === 1) { rankStyle = "rank-gold"; icon = '<i data-lucide="medal" class="w-4 h-4"></i>'; }
+                else if(rank === 2) { rankStyle = "rank-silver"; icon = '<i data-lucide="medal" class="w-4 h-4"></i>'; }
+                else if(rank === 3) { rankStyle = "rank-bronze"; icon = '<i data-lucide="medal" class="w-4 h-4"></i>'; }
+                else { icon = `<span class="w-4 text-center font-bold text-xs">${rank}</span>`; }
+
+                const priceValue = parseInt(d['거래금액(만원)'].replace(/,/g, ''));
+
+                return `
+                    <div class="group flex items-center gap-4 p-3 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all duration-300">
+                        <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-white/5 ${rankStyle}">
+                            ${icon}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="font-bold text-sm text-gray-200 truncate group-hover:text-blue-300 transition-colors">${d.아파트명}</h4>
+                                <span class="text-sm font-extrabold ${rank <= 3 ? rankStyle : 'text-blue-400'}">
+                                    ${formatPrice(priceValue)}
+                                </span>
+                            </div>
+                            <div class="flex gap-2 text-[11px] text-gray-500">
+                                <span class="bg-white/5 px-1.5 py-0.5 rounded">${d['전용면적(㎡)']}㎡</span>
+                                <span class="bg-white/5 px-1.5 py-0.5 rounded">${d.층}층</span>
+                                <span class="truncate">${d.법정동}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('transaction-table-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500">조건에 맞는 거래 내역이 없습니다.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.map(d => {
+                const priceValue = parseInt(d['거래금액(만원)'].replace(/,/g, ''));
+                const priceClass = priceValue >= 50000 ? 'text-red-400 font-extrabold' : 'text-blue-400 font-bold';
+                
+                return `
+                    <tr class="hover:bg-white/10 odd:bg-white/[0.02] even:bg-transparent transition-all duration-200 group">
+                        <td class="p-4 text-gray-400 font-mono">${d.거래일자}</td>
+                        <td class="p-4 font-semibold text-white group-hover:text-blue-300 transition-colors">${d.아파트명}</td>
+                        <td class="p-4 text-gray-400">${d.법정동}</td>
+                        <td class="p-4 text-right">${d['전용면적(㎡)']}</td>
+                        <td class="p-4 text-center text-gray-500">${d.층}층</td>
+                        <td class="p-4 text-right ${priceClass}">${priceValue.toLocaleString()}</td>
+                        <td class="p-4 text-center text-gray-500">${d.건축년도}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTopApts(data) {
             const aptCounts = {};
             data.forEach(d => {
                 aptCounts[d.아파트명] = (aptCounts[d.아파트명] || 0) + 1;
@@ -259,61 +419,49 @@
                 .slice(0, 5);
 
             const aptContainer = document.getElementById('top-apartments');
+            if (topApts.length === 0) {
+                aptContainer.innerHTML = `<p class="text-gray-500 text-sm py-4">순위 데이터가 없습니다.</p>`;
+                return;
+            }
             aptContainer.innerHTML = topApts.map(([name, count]) => `
-                <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                    <span class="font-medium text-gray-300 truncate mr-2">${name}</span>
-                    <span class="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-md font-bold">${count}건</span>
+                <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-default">
+                    <span class="font-medium text-gray-300 truncate mr-2 text-sm">${name}</span>
+                    <span class="bg-purple-500/20 text-purple-400 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider">${count}건 거래</span>
                 </div>
-            `).join('');
-
-            // 4. Monthly Chart
-            renderChart(data);
-        }
-
-        function renderTable(data) {
-            const tbody = document.getElementById('transaction-table-body');
-            tbody.innerHTML = data.map(d => `
-                <tr class="hover:bg-white/10 transition-colors group">
-                    <td class="p-4 text-gray-400 font-mono">${d.거래일자}</td>
-                    <td class="p-4 font-semibold text-white">${d.아파트명}</td>
-                    <td class="p-4 text-gray-400">${d.법정동}</td>
-                    <td class="p-4 text-right">${d['전용면적(㎡)']}</td>
-                    <td class="p-4 text-center text-gray-500">${d.층}층</td>
-                    <td class="p-4 text-right font-bold text-blue-400">${parseInt(d['거래금액(만원)'].replace(/,/g, '')).toLocaleString()}</td>
-                    <td class="p-4 text-center text-gray-500">${d.건축년도}</td>
-                </tr>
             `).join('');
         }
 
         function renderChart(data) {
-            // Group by Month (YYYY-MM)
             const monthlyData = {};
             data.forEach(d => {
-                // Assuming date format is like 20240101 or 2024.01.01
                 const dateStr = d.거래일자.replace(/[^0-9]/g, '');
-                const monthKey = dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6);
-                
-                if (!monthlyData[monthKey]) {
-                    monthlyData[monthKey] = { total: 0, count: 0 };
-                }
-                const price = parseInt(d['거래금액(만원)'].replace(/,/g, ''));
-                if (!isNaN(price)) {
-                    monthlyData[monthKey].total += price;
-                    monthlyData[monthKey].count += 1;
+                if (dateStr.length >= 6) {
+                    const monthKey = dateStr.substring(0, 4) + '-' + dateStr.substring(4, 6);
+                    if (!monthlyData[monthKey]) {
+                        monthlyData[monthKey] = { total: 0, count: 0 };
+                    }
+                    const price = parseInt(d['거래금액(만원)'].replace(/,/g, ''));
+                    if (!isNaN(price)) {
+                        monthlyData[monthKey].total += price;
+                        monthlyData[monthKey].count += 1;
+                    }
                 }
             });
 
-            const sortedMonths = Object.keys(monthlyData).sort();
-            const labels = sortedMonths;
-            const values = sortedMonths.map(m => Math.round(monthlyData[m].total / monthlyData[m].count));
+            // Get all months and sort
+            const allMonths = Object.keys(monthlyData).sort();
+            
+            // Slice the last 6 months
+            const recentMonths = allMonths.slice(-6);
+            
+            const labels = recentMonths;
+            const values = recentMonths.map(m => Math.round(monthlyData[m].total / monthlyData[m].count));
 
             if (priceChart) priceChart.destroy();
 
             const ctx = document.getElementById('priceChart').getContext('2d');
-            
-            // Gradient for chart
             const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
             gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
 
             priceChart = new Chart(ctx, {
@@ -327,7 +475,8 @@
                         borderWidth: 3,
                         pointBackgroundColor: '#3b82f6',
                         pointBorderColor: '#ffffff',
-                        pointHoverRadius: 6,
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 8,
                         fill: true,
                         backgroundColor: gradient,
                         tension: 0.4
@@ -339,12 +488,10 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            padding: 15,
                             titleFont: { size: 14, weight: 'bold' },
-                            bodyFont: { size: 13 },
+                            bodyFont: { size: 14 },
                             callbacks: {
                                 label: function(context) {
                                     return `평균: ${context.parsed.y.toLocaleString()} 만원`;
@@ -357,7 +504,7 @@
                             grid: { color: 'rgba(255, 255, 255, 0.05)' },
                             ticks: { 
                                 color: 'rgba(255, 255, 255, 0.5)',
-                                callback: function(value) { return value.toLocaleString() + '만'; }
+                                callback: value => value.toLocaleString() + '만'
                             }
                         },
                         x: {
@@ -369,15 +516,9 @@
             });
         }
 
-        // Search Filter
-        document.getElementById('table-search').addEventListener('input', (e) => {
-            const keyword = e.target.value.toLowerCase();
-            const filtered = rawData.filter(d => 
-                d.아파트명.toLowerCase().includes(keyword) || 
-                d.법정동.toLowerCase().includes(keyword)
-            );
-            renderTable(filtered);
-        });
+        // Event Listeners
+        document.getElementById('district-filter').addEventListener('change', applyFiltersAndRender);
+        document.getElementById('table-search').addEventListener('input', applyFiltersAndRender);
 
         // Initial Load
         window.onload = loadData;
